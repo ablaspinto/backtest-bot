@@ -1,0 +1,7 @@
+
+
+#.gitignore
+
+internal/historical_data/archive/
+
+*.csv
