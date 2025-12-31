@@ -2,6 +2,7 @@ package main
 
 import (
 	"cmd/internal/data"
+	"cmd/internal/indicators"
 	"fmt"
 )
 
@@ -11,8 +12,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("error loading bars")
 	}
-	for b := range bars {
-		fmt.Printf("BAR: %v", b)
-	}
+	smaObj := indicators.SMA(bars, 10)
+	fmt.Printf("SMABARS: %v\n", smaObj)
 
 }
