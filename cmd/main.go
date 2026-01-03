@@ -14,5 +14,7 @@ func main() {
 	}
 	smaObj := indicators.SMA(bars, 10)
 	fmt.Printf("SMABARS: %v\n", smaObj)
+	emaObj := indicators.EMA(bars, 10, smaObj[0])
+	fmt.Printf("EMA BARS %v\n", emaObj)
 
 }
