@@ -13,8 +13,10 @@ func main() {
 		fmt.Printf("error loading bars")
 	}
 	smaObj := indicators.SMA(bars, 10)
-	fmt.Printf("SMABARS: %v\n", smaObj)
+	fmt.Printf("SMA BARS: %v\n", smaObj)
 	emaObj := indicators.EMA(bars, 10, smaObj[0])
-	fmt.Printf("EMA BARS %v\n", emaObj)
+	fmt.Printf("EMA BARS: %v\n", emaObj)
+	rsiObj := indicators.RSI(bars, 14)
+	fmt.Printf("RSI : %v\n", rsiObj)
 
 }
