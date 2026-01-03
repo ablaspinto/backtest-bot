@@ -34,8 +34,8 @@ func (l *ldr) LoadSingleFile(filename string) ([]Bar, error) {
 		fmt.Print("Error with records\n")
 		return []Bar{}, ErrWithRecords
 	}
-
-	for i, record := range records {
+	for i := len(records) - 1; i > 0; i-- {
+		record := records[i]
 		if i == 0 {
 			continue
 		}
