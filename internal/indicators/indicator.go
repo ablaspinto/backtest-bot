@@ -2,7 +2,6 @@ package indicators
 
 import (
 	"cmd/internal/data"
-	"fmt"
 	"math"
 )
 
@@ -26,26 +25,54 @@ func SMA(bars []data.Bar, period int) []float32 {
 	return smaAverages
 }
 
-func EMA(bars []data.Bar, period float32, firstSmaValue float32) []float32 {
-	var emaAverages []float32
-	// EMA = (priceToday * k) + (emaYesterday * (1 - k))
-	// k = 2 / (period + 1)
-	k := float32(2) / (period + float32(1))
-	j := 0
-	fmt.Printf("K: %v\n", k)
-	for i := 11; i < len(bars)-1; i++ { // start at 10, since we averaged out for the first sMA value
-		closePrice := bars[i].Close
-		if i == 11 {
-			ema := (closePrice * k) + (firstSmaValue * (1 - k))
-			emaAverages = append(emaAverages, ema)
-			continue
+func EMA(bars []data.Bar, period int) []float32 {
+	result := make([]float32, len(bars))
+	var sum float32
+	for i := range period {
+		sum += bars[i].Close
+		if i < period-1 {
+			result[i] = float32(math.NaN())
 		}
-		ema := (closePrice * k) + (emaAverages[j] * (1 - k))
-		emaAverages = append(emaAverages, ema)
-		j++
+	}
+	result[period-1] = sum / float32(period)
+
+	// Calculate EMA for remaining bars
+	k := float32(2) / float32(period+1)
+	for i := period; i < len(bars); i++ {
+		result[i] = (bars[i].Close * k) + (result[i-1] * (1 - k))
 	}
 
-	return emaAverages
+	return result
+}
+
+func emaMACD(bars []float32, period int) []float32 {
+	result := make([]float32, len(bars))
+	var sum float32
+	var startIndex int
+	// Fill all invalid indices with NaN
+	for i := range bars {
+		if !math.IsNaN(float64(bars[i])) {
+			startIndex = i
+			break
+		}
+	}
+	for i := 0; i < startIndex+period-1; i++ {
+		result[i] = float32(math.NaN())
+	}
+
+	// Calculate SMA seed
+	for i := range period {
+		sum += bars[i+startIndex]
+	}
+	result[startIndex+period-1] = sum / float32(period)
+
+	// Calculate EMA for remaining bars
+	k := float32(2) / float32(period+1)
+	for i := startIndex + period; i < len(bars); i++ {
+		result[i] = (bars[i] * k) + (result[i-1] * (1 - k))
+	}
+
+	return result
 }
 
 func RSI(bars []data.Bar, period float32) []float32 {
@@ -99,4 +126,20 @@ func RSI(bars []data.Bar, period float32) []float32 {
 		rsiValues = append(rsiValues, secRSI)
 	}
 	return rsiValues
+}
+
+func MACD(bars []data.Bar) []float32 {
+	var macd []float32
+	var histogram []float32
+	first := EMA(bars, 12)
+	second := EMA(bars, 26)
+	for i := range len(first) {
+		macd = append(macd, first[i]-second[i])
+	}
+	signal := emaMACD(macd, 9)
+	for i := range len(signal) {
+		histogram = append(histogram, macd[i]-signal[i])
+	}
+	return histogram
+
 }
