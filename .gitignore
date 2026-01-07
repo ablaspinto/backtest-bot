@@ -5,3 +5,4 @@
 internal/historical_data/archive/
 
 *.csv
+.env
