@@ -29,7 +29,7 @@ type Service interface {
 	DeleteCandlesBySymbol(ctx context.Context, symbol string) error
 	DeleteCandlesByTimeFrame(ctx context.Context, params deleteCandlesByTimeFrameParams) error
 	DeleteOldCandles(ctx context.Context, timestamps int64) error
-	DeleteCandlesInRange(ctx context.Context, params repo.DeleteCandlesInRangeParams) error
+	DeleteCandlesInRange(ctx context.Context, params deleteCandlesInRangeParams) error
 	GetDistinctSymbols(ctx context.Context, symbol string) ([]string, error)
 	GetDistinctTimeFrames(ctx context.Context, symbol string) ([]string, error)
 	GetSymbolTimeframePairs(ctx context.Context) ([]repo.GetSymbolTimeframePairsRow, error)
@@ -293,7 +293,7 @@ func (s *svc) DeleteOldCandles(ctx context.Context, timestamps int64) error {
 	}
 	return nil
 }
-func (s *svc) DeleteCandlesInRange(ctx context.Context, params repo.DeleteCandlesInRangeParams) error {
+func (s *svc) DeleteCandlesInRange(ctx context.Context, params deleteCandlesInRangeParams) error {
 	err := s.repo.DeleteCandlesInRange(ctx, repo.DeleteCandlesInRangeParams{
 		Symbol:      params.Symbol,
 		Timeframe:   params.Timeframe,
