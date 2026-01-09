@@ -17,5 +17,10 @@ func ParseIdResponse(r *http.Request, w http.ResponseWriter, fieldName string) (
 		json.WriteError(w, http.StatusBadRequest, "Invalid Request")
 		return 0, false
 	}
-	return int32(num), true
+	return int64(num), true
+}
+
+func ParseSymbolName(r *http.Request, w http.ResponseWriter, fieldName string) string {
+	strId := chi.URLParam(r, fieldName)
+	return strId
 }
