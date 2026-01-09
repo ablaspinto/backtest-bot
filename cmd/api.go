@@ -1,6 +1,8 @@
 package main
 
 import (
+	repo "cmd/internal/adapters/postgresql/sqlc"
+	"cmd/internal/api/candles"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +34,37 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	candleService := candles.NewService(repo.New(app.db))
+	candleHandler := candles.NewHandler(candleService)
+	r.Post("/candles", candleHandler.CreateCandle)
+	r.Get("/candles/{id}", candleHandler.GetCandleByID)
+	r.Get("/candles/params", candleHandler.GetCandle)
+	r.Get("/candles/latest", candleHandler.GetLatestCandle)
+	r.Get("/candles/recent", candleHandler.GetRecentCandles)
+	r.Get("/candles/in-range", candleHandler.GetCandlesInRange)
+	r.Get("/candles/timestamp/after", candleHandler.GetCandlesAfterTimestamp)
+	r.Get("/candles/timestamp/before", candleHandler.GetCandlesBeforeTimestamp)
+	r.Get("/candles/paginated", candleHandler.ListCandlesPaginated)
+	r.Get("/candles/symbol", candleHandler.GetCandlesBySymbol)
+	r.Get("/candles/count", candleHandler.CountCandles)
+	r.Get("/candles/count/in-range", candleHandler.CountCandlesInRange)
+	r.Get("/candles/stats", candleHandler.GetCandleStats)
+	r.Get("/candles/stats/in-range", candleHandler.GetCandleStatsInRange)
+	r.Get("/candles/volume", candleHandler.GetVolumeLeaders)
+	r.Put("/candles", candleHandler.UpdateCandle)
+	r.Delete("/candles/{id}", candleHandler.DeleteCandle)
+	r.Delete("/candles/symbol", candleHandler.DeleteCandlesBySymbol)
+	r.Delete("/candles/time-frame", candleHandler.DeleteCandlesByTimeFrame)
+	r.Delete("/candles/old", candleHandler.DeleteOldCandles)
+	r.Delete("/candles/in-range", candleHandler.DeleteCandlesInRange)
+	r.Get("/candles/symbols/distinct", candleHandler.GetDistinctSymbols)
+	r.Get("/candles/time-frame/distinct", candleHandler.GetDistinctTimeFrames)
+	r.Get("/candles/pairs", candleHandler.GetSymbolTimeframePairs)
+	r.Get("/candles/exists", candleHandler.CheckCandleExists)
+	r.Get("/candles/oldest", candleHandler.GetOldestCandle)
+	r.Get("/candles/gap", candleHandler.GetCandleGaps)
+
 	return r
 }
 
