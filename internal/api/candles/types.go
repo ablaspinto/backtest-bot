@@ -106,7 +106,7 @@ type deleteCandlesByTimeFrameParams struct {
 	Symbol    string `json:"symbol"`
 	Timeframe string `json:"timeframe"`
 }
-type delteCandlesInRangeParams struct {
+type deleteCandlesInRangeParams struct {
 	Symbol      string `json:"symbol"`
 	Timeframe   string `json:"timeframe"`
 	Timestamp   int64  `json:"timestamp"`
