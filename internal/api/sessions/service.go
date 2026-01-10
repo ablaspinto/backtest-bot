@@ -5,10 +5,6 @@ import (
 	"cmd/internal/dberrors"
 	"cmd/internal/pgconverter"
 	"context"
-	"runtime/debug"
-
-	"github.com/jackc/pgx/v5/pgtype"
-	"google.golang.org/grpc/benchmark"
 )
 
 type Service interface {
@@ -16,38 +12,38 @@ type Service interface {
 	GetSessionByID(ctx context.Context, id int64) (repo.Session, error)
 	GetSessionByName(ctx context.Context, sessionName string) (repo.Session, error)
 	ListAllSessions(ctx context.Context) ([]repo.Session, error)
-	ListSessionsWithLimit(ctx context.Context, limit, offset string) ([]repo.Session, error)
-	GetActiveSessions(ctx context.Context)
-	GetCompletedSessions(ctx context.Context)
-	GetFavoriteSessions(ctx context.Context)
-	GetSessionsBySymbol(ctx context.Context)
-	GetSessionByStrategy(ctx context.Context)
-	GetSessionByStatus(ctx context.Context)
-	GetRecentSessions(ctx context.Context)
-	SearchSessionByName(ctx context.Context)
-	GetSessionWithTags(ctx context.Context) ([]repo.Session, error)
-	UpdateSession(ctx context.Context) ([]repo.Session, error)
-	UpdateSessionEnd(ctx context.Context) ([]repo.Session, error)
-	UpdateSessionStatus(ctx context.Context) ([]repo.Session, error)
-	UpdateSessionPrices(ctx context.Context) ([]repo.Session, error)
-	ToggleSessionFavorite(ctx context.Context) ([]repo.Session, error)
-	AddSessionTag(ctx context.Context) ([]repo.Session, error)
-	RemoveSessionTag(ctx context.Context) ([]repo.Session, error)
-	DeleteSession(ctx context.Context) ([]repo.Session, error)
-	DeleteOldSessions(ctx context.Context) ([]repo.Session, error)
-	DeleteSessionsByStatus(ctx context.Context) ([]repo.Session, error)
-	CountSessions(ctx context.Context) ([]repo.Session, error)
-	CountSessionsByStatus(ctx context.Context) ([]repo.Session, error)
-	GetSessionStats(ctx context.Context) ([]repo.Session, error)
+	ListSessionsWithLimit(ctx context.Context, params listSessionParams) ([]repo.Session, error)
+	GetActiveSessions(ctx context.Context) ([]repo.Session, error)
+	GetCompletedSessions(ctx context.Context, num int32) ([]repo.Session, error)
+	GetFavoriteSessions(ctx context.Context) ([]repo.Session, error)
+	GetSessionsBySymbol(ctx context.Context, params getSessionBySymbolsParams) ([]repo.Session, error)
+	GetSessionByStrategy(ctx context.Context, params getSessionByStrategyParams) ([]repo.Session, error)
+	GetSessionByStatus(ctx context.Context, params getSessionByStatusParams) ([]repo.Session, error)
+	GetRecentSessions(ctx context.Context, str string) ([]repo.Session, error)
+	SearchSessionByName(ctx context.Context, params searchSessionByNameParams) ([]repo.Session, error)
+	GetSessionWithTags(ctx context.Context, params getSessionWithTagsParams) ([]repo.Session, error)
+	UpdateSession(ctx context.Context, params updateSessionParams) (repo.Session, error)
+	UpdateSessionEnd(ctx context.Context, params updateSessionEndParams) (repo.Session, error)
+	UpdateSessionStatus(ctx context.Context, params updateSessionStatus) error
+	UpdateSessionPrices(ctx context.Context, params updateSessionPricesParams) error
+	ToggleSessionFavorite(ctx context.Context, id int64) (bool, error)
+	AddSessionTag(ctx context.Context, params addSessionTagParams) error
+	RemoveSessionTag(ctx context.Context, params removeSessionTagParams) error
+	DeleteSession(ctx context.Context, id int64) error
+	DeleteOldSessions(ctx context.Context, old string) error
+	DeleteSessionsByStatus(ctx context.Context, status string) error
+	CountSessions(ctx context.Context) (int64, error)
+	CountSessionsByStatus(ctx context.Context, stat string) (int64, error)
+	GetSessionStats(ctx context.Context) (repo.GetSessionStatsRow, error)
 	GetSymbolStats(ctx context.Context) ([]repo.Session, error)
-	GetStrategyPerformance(ctx context.Context) ([]repo.Session, error)
-	GetDailySessionCount(ctx context.Context) ([]repo.Session, error)
-	CheckSessionExists(ctx context.Context) ([]repo.Session, error)
-	GetLatestSession(ctx context.Context) ([]repo.Session, error)
-	GetLongestSession(ctx context.Context) ([]repo.Session, error)
-	GetMostProfitableSession(ctx context.Context) ([]repo.Session, error)
-	GetMostVolatileSession(ctx context.Context) ([]repo.Session, error)
-	GetSessionDuration(ctx context.Context) ([]repo.Session, error)
+	GetStrategyPerformance(ctx context.Context) ([]repo.GetStrategyPerformanceRow, error)
+	GetDailySessionCount(ctx context.Context, c string) ([]repo.GetDailySessionCountRow, error)
+	CheckSessionExists(ctx context.Context, id int64) (bool, error)
+	GetLatestSession(ctx context.Context) (repo.Session, error)
+	GetLongestSession(ctx context.Context, num int32) ([]repo.Session, error)
+	GetMostProfitableSession(ctx context.Context, num int32) ([]repo.Session, error)
+	GetMostVolatileSession(ctx context.Context, num int32) ([]repo.Session, error)
+	GetSessionDuration(ctx context.Context, id int64) (int32, error)
 }
 type svc struct {
 	repo *repo.Queries
