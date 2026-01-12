@@ -3,6 +3,7 @@ package main
 import (
 	repo "cmd/internal/adapters/postgresql/sqlc"
 	"cmd/internal/api/candles"
+	"cmd/internal/api/sessions"
 	"log"
 	"net/http"
 	"os"
@@ -35,6 +36,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	//Candle API
 	candleService := candles.NewService(repo.New(app.db))
 	candleHandler := candles.NewHandler(candleService)
 	r.Post("/candles", candleHandler.CreateCandle)
@@ -64,6 +66,22 @@ func (app *application) mount() http.Handler {
 	r.Get("/candles/exists", candleHandler.CheckCandleExists)
 	r.Get("/candles/oldest", candleHandler.GetOldestCandle)
 	r.Get("/candles/gap", candleHandler.GetCandleGaps)
+
+	//Session API
+	sessionService := sessions.NewService(repo.New(app.db))
+	sessionHandler := sessions.NewHandler(sessionService)
+	r.Post("/sessions", sessionHandler.CreateSession)
+	r.Get("/sessions/{id}", sessionHandler.GetSessionByID)
+	r.Get("/sessions/name/{session_name}", sessionHandler.GetSessionByName)
+	r.Get("/sessions/all", sessionHandler.ListAllSessions)
+	r.Get("/sessions/all/limit", sessionHandler.ListSessionWithLimit)
+	r.Get("/sessions/active", sessionHandler.GetActiveSessions)
+	r.Get("/sessions/completed", sessionHandler.GetCompletedSessions)
+	r.Get("/sessions/favorite", sessionHandler.GetFavoriteSessions)
+	r.Get("/sessions/symbol", sessionHandler.GetSessionsBySymbols)
+	r.Get("/sessions/strategy", sessionHandler.GetSessionByStrategy)
+	r.Get("/sessions/status", sessionHandler.GetSessionByStatus)
+	r.Get("/sessions/recent", sessionHandler.GetRecentSessions)
 
 	return r
 }
