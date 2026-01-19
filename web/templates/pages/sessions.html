@@ -1,0 +1,9 @@
+{{define "sessions"}}
+<div class="sessions-page">
+    <h1>Sessions</h1>
+    
+    <div hx-get="/htmx/sessions/list" hx-trigger="load">
+        Loading sessions...
+    </div>
+</div>
+{{end}}

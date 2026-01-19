@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} | Market Sim</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body hx-boost="true">
+    <nav class="navbar">
+        <div class="nav-brand">Market Sim</div>
+        <div class="nav-links">
+            <a href="/" {{if eq .Page "index"}}class="active"{{end}}>Home</a>
+            <a href="/dashboard" {{if eq .Page "dashboard"}}class="active"{{end}}>Dashboard</a>
+            <a href="/sessions-page" {{if eq .Page "sessions"}}class="active"{{end}}>Sessions</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        {{if eq .Page "index"}}
+            {{template "index" .}}
+        {{else if eq .Page "dashboard"}}
+            {{template "dashboard" .}}
+        {{else if eq .Page "sessions"}}
+            {{template "sessions" .}}
+        {{end}}
+    </main>
+
+    <script>
+        // Optional: handle htmx events
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            console.log('Content swapped:', evt.detail.target.id);
+        });
+    </script>
+</body>
+</html>
