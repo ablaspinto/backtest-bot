@@ -48,3 +48,7 @@ func Int4ToInt32(num pgtype.Int4) int32 {
 	return num.Int32
 
 }
+
+func Int32toInt4(i int32) pgtype.Int4 {
+	return pgtype.Int4{Valid: true, Int32: i}
+}
