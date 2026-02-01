@@ -94,3 +94,118 @@ type updateIndicatorParams struct {
 	Signal         string `json:"signal"`
 	SignalStrength string `json:"signal_strength"`
 }
+
+type updateIndicatorSignalParams struct {
+	ID             int64  `json:"id"`
+	Signal         string `json:"signal"`
+	SignalStrength string `json:"signal_strength"`
+}
+
+type markCrossoverParams struct {
+	ID            int64  `json:"id"`
+	CrossoverType string `json:"crossover_type"`
+}
+
+type getBuySignalsParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getSellSignalsParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getOverboughtIndicatorsParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getOversoldIndicatorsParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getSignalsByStrengthParams struct {
+	Symbol         string `json:"symbol"`
+	Timeframe      string `json:"timeframe"`
+	SignalStrength string `json:"signal_strength"`
+	Limit          int32  `json:"limit"`
+}
+
+type getCrossoversParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type getGoldenCrossesParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getDeathCrossesParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getRecentCrossoversParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Limit     int32  `json:"limit"`
+}
+
+type getRsiExtremesParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Value     string `json:"value"`
+	Value_2   string `json:"value_2"`
+	Timestamp int64  `json:"timestamp"`
+}
+type getBollingerBreakoutsParams struct {
+	Symbol    string `json:"symbol"`
+	Timeframe string `json:"timeframe"`
+	Timestamp int64  `json:"timestamp"`
+	Limit     int32  `json:"limit"`
+}
+
+type getMAConvergenceParams struct {
+	Symbol      string `json:"symbol"`
+	Timeframe   string `json:"timeframe"`
+	Period      int32  `json:"period"`
+	Period_2    int32  `json:"period_2"`
+	Timestamp   int64  `json:"timestamp"`
+	Timestamp_2 int64  `json:"timestamp_2"`
+}
+
+type checkIndicatorExistsParams struct {
+	CandleID      int64  `json:"candle_id"`
+	IndicatorType string `json:"indicator_type"`
+	Period        int32  `json:"period"`
+}
+
+type getLatestIndicatorParams struct {
+	Symbol        string `json:"symbol"`
+	Timeframe     string `json:"timeframe"`
+	IndicatorType string `json:"indicator_type"`
+	Period        int32  `json:"period"`
+}
+
+type getIndicatorHistoryParams struct {
+	Symbol        string `json:"symbol"`
+	Timeframe     string `json:"timeframe"`
+	IndicatorType string `json:"indicator_type"`
+	Limit         int32  `json:"limit"`
+}
