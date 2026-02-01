@@ -5,11 +5,12 @@ import (
 	"cmd/internal/dberrors"
 	"cmd/internal/pgconverter"
 	"context"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Service interface {
 	CreateIndicator(ctx context.Context, params createIndicatorParams) (repo.Indicator, error)
-	//	CreateIndicatorBatch(ctx context.Context) (int64 , error)
+	CreateIndicatorBatch(ctx context.Context, candleBatch []createIndicatorBatchParams) (int64, error)
 	GetIndicatorByID(ctx context.Context, id int64) (repo.Indicator, error)
 	GetIndicatorsByCandle(ctx context.Context, candleId int64) ([]repo.Indicator, error)
 	GetIndicatorByType(ctx context.Context, params getIndicatorByTypeParams) (repo.Indicator, error)
@@ -43,6 +44,11 @@ type Service interface {
 	GetCrossoverFrequency(ctx context.Context) ([]repo.GetCrossoverFrequencyRow, error)
 	GetRSIExtremes(ctx context.Context, params getRsiExtremesParams) ([]repo.GetRSIExtremesRow, error)
 	GetBollingerBreakouts(ctx context.Context, params getBollingerBreakoutsParams) ([]repo.GetBollingerBreakoutsRow, error)
+	GetMAConvergence(ctx context.Context, params getMAConvergenceParams) ([]repo.GetMAConvergenceRow, error)
+	GetDistinctIndicatorTypes(ctx context.Context) ([]string, error)
+	GetIndicatorPeriods(ctx context.Context, indicatorString string) ([]pgtype.Int4, error)
+	CheckIndicatorExists(ctx context.Context, params checkIndicatorExistsParams) (bool, error)
+	GetLatestIndicator(ctx context.Context, params getLatestIndicatorParams) (repo.GetLatestIndicatorRow, error)
 }
 
 type svc struct {
@@ -71,6 +77,27 @@ func (s *svc) CreateIndicator(ctx context.Context, params createIndicatorParams)
 	}
 	return ind, nil
 
+}
+func (s *svc) CreateIndicatorBatch(ctx context.Context, params []createIndicatorBatchParams) (int64, error) {
+	var indicatorBatch []repo.CreateIndicatorBatchParams
+
+	for i := range len(params) {
+		ind := repo.CreateIndicatorBatchParams{
+			CandleID:      params[i].CandleID,
+			Signal:        pgconverter.PGTextConv(params[i].Signal),
+			Period:        pgconverter.Int32toInt4(params[i].Period),
+			Value:         pgconverter.PGNumericConverter(params[i].Value),
+			IndicatorType: params[i].IndicatorType,
+		}
+		indicatorBatch = append(indicatorBatch, ind)
+	}
+
+	batch, err := s.repo.CreateIndicatorBatch(ctx, indicatorBatch)
+
+	if err != nil {
+		return 0, dberrors.Handle(err)
+	}
+	return batch, nil
 }
 
 func (s *svc) GetIndicatorByID(ctx context.Context, id int64) (repo.Indicator, error) {
@@ -378,6 +405,7 @@ func (s *svc) GetRecentCrossovers(ctx context.Context, params getRecentCrossover
 		Symbol:    params.Symbol,
 		Timeframe: params.Timeframe,
 	})
+
 	if err != nil {
 		return []repo.GetRecentCrossoversRow{}, dberrors.Handle(err)
 	}
@@ -452,4 +480,74 @@ func (s *svc) GetBollingerBreakouts(ctx context.Context, params getBollingerBrea
 	}
 	return bollingerBreakouts, nil
 
+}
+
+func (s *svc) GetMAConvergence(ctx context.Context, params getMAConvergenceParams) ([]repo.GetMAConvergenceRow, error) {
+	maConvergence, err := s.repo.GetMAConvergence(ctx, repo.GetMAConvergenceParams{
+		Period:      pgconverter.Int32toInt4(params.Period),
+		Period_2:    pgconverter.Int32toInt4(params.Period_2),
+		Timestamp:   params.Timestamp,
+		Timeframe:   params.Timeframe,
+		Timestamp_2: params.Timestamp,
+		Symbol:      params.Symbol,
+	})
+	if err != nil {
+		return []repo.GetMAConvergenceRow{}, dberrors.Handle(err)
+	}
+	return maConvergence, nil
+}
+
+func (s *svc) GetDistinctIndicatorTypes(ctx context.Context) ([]string, error) {
+	indicatorTypes, err := s.repo.GetDistinctIndicatorTypes(ctx)
+	if err != nil {
+		return []string{}, nil
+	}
+	return indicatorTypes, nil
+}
+
+func (s *svc) GetIndicatorPeriods(ctx context.Context, indicatorString string) ([]pgtype.Int4, error) {
+	num, err := s.repo.GetIndicatorPeriods(ctx, indicatorString)
+	if err != nil {
+		return []pgtype.Int4{}, dberrors.Handle(err)
+	}
+	return num, nil
+}
+
+func (s *svc) CheckIndicatorExists(ctx context.Context, params checkIndicatorExistsParams) (bool, error) {
+	indicatorExists, err := s.repo.CheckIndicatorExists(ctx, repo.CheckIndicatorExistsParams{
+		CandleID:      params.CandleID,
+		Period:        pgconverter.Int32toInt4(params.Period),
+		IndicatorType: params.IndicatorType,
+	})
+
+	if err != nil {
+		return false, err
+	}
+	return indicatorExists, nil
+}
+
+func (s *svc) GetLatestIndicator(ctx context.Context, params getLatestIndicatorParams) (repo.GetLatestIndicatorRow, error) {
+	indicator, err := s.repo.GetLatestIndicator(ctx, repo.GetLatestIndicatorParams{
+		Period:        pgconverter.Int32toInt4(params.Period),
+		Timeframe:     params.Timeframe,
+		IndicatorType: params.IndicatorType,
+		Symbol:        params.Symbol,
+	})
+	if err != nil {
+		return repo.GetLatestIndicatorRow{}, dberrors.Handle(err)
+	}
+	return indicator, nil
+}
+
+func (s *svc) GetIndicatorHistoryA(ctx context.Context, params getIndicatorHistoryParams) ([]repo.GetIndicatorHistoryRow, error) {
+	indicatorHistoryRow, err := s.repo.GetIndicatorHistory(ctx, repo.GetIndicatorHistoryParams{
+		Symbol:        params.Symbol,
+		IndicatorType: params.IndicatorType,
+		Timeframe:     params.Timeframe,
+		Limit:         params.Limit,
+	})
+	if err != nil {
+		return []repo.GetIndicatorHistoryRow{}, dberrors.Handle(err)
+	}
+	return indicatorHistoryRow, nil
 }
