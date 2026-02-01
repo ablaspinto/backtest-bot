@@ -1,16 +1,13 @@
 package main
 
 import (
-	"html/template"
+	repo "cmd/internal/adapters/postgresql/sqlc"
+	"cmd/internal/api/candles"
+	"cmd/internal/api/sessions"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	repo "cmd/internal/adapters/postgresql/sqlc"
-	"cmd/internal/api/candles"
-	"cmd/internal/api/sessions"
-	"cmd/internal/api/web" // your htmx handlers
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,9 +15,8 @@ import (
 )
 
 type application struct {
-	config    config
-	db        *pgx.Conn
-	templates *template.Template
+	config config
+	db     *pgx.Conn
 }
 
 type config struct {
@@ -34,59 +30,58 @@ type dbConfig struct {
 
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
-
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// ================================
-	// Static files
-	// ================================
-	r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("web/css"))))
-	r.Handle("/js/*", http.StripPrefix("/js/", http.FileServer(http.Dir("web/js"))))
-	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("web/assets"))))
-
-	// ================================
-	// Web/htmx routes (returns HTML)
-	// ================================
-	webHandler := web.NewHandler(repo.New(app.db), app.templates)
-
-	// Pages
-	r.Get("/", webHandler.Index)
-	r.Get("/dashboard", webHandler.Dashboard)
-	r.Get("/sessions-page", webHandler.SessionsPage)
-
-	// htmx partials
-	r.Route("/htmx", func(r chi.Router) {
-		r.Get("/candles/table", webHandler.CandlesTable)
-		r.Get("/candles/search", webHandler.SearchCandles)
-		r.Delete("/candles/{id}", webHandler.DeleteCandle)
-		r.Get("/sessions/list", webHandler.SessionsList)
-		r.Get("/sessions/active", webHandler.ActiveSessions)
-		r.Post("/sessions/{id}/toggle-favorite", webHandler.ToggleFavorite)
-	})
-
-	// ================================
-	// JSON API (your existing handlers - unchanged)
-	// ================================
+	//Candle API
 	candleService := candles.NewService(repo.New(app.db))
 	candleHandler := candles.NewHandler(candleService)
-
 	r.Post("/candles", candleHandler.CreateCandle)
 	r.Get("/candles/{id}", candleHandler.GetCandleByID)
 	r.Get("/candles/params", candleHandler.GetCandle)
 	r.Get("/candles/latest", candleHandler.GetLatestCandle)
 	r.Get("/candles/recent", candleHandler.GetRecentCandles)
-	// ... all your other candle routes stay the same ...
+	r.Get("/candles/in-range", candleHandler.GetCandlesInRange)
+	r.Get("/candles/timestamp/after", candleHandler.GetCandlesAfterTimestamp)
+	r.Get("/candles/timestamp/before", candleHandler.GetCandlesBeforeTimestamp)
+	r.Get("/candles/paginated", candleHandler.ListCandlesPaginated)
+	r.Get("/candles/symbol", candleHandler.GetCandlesBySymbol)
+	r.Get("/candles/count", candleHandler.CountCandles)
+	r.Get("/candles/count/in-range", candleHandler.CountCandlesInRange)
+	r.Get("/candles/stats", candleHandler.GetCandleStats)
+	r.Get("/candles/stats/in-range", candleHandler.GetCandleStatsInRange)
+	r.Get("/candles/volume", candleHandler.GetVolumeLeaders)
+	r.Put("/candles", candleHandler.UpdateCandle)
+	r.Delete("/candles/{id}", candleHandler.DeleteCandle)
+	r.Delete("/candles/symbol", candleHandler.DeleteCandlesBySymbol)
+	r.Delete("/candles/time-frame", candleHandler.DeleteCandlesByTimeFrame)
+	r.Delete("/candles/old", candleHandler.DeleteOldCandles)
+	r.Delete("/candles/in-range", candleHandler.DeleteCandlesInRange)
+	r.Get("/candles/symbols/distinct", candleHandler.GetDistinctSymbols)
+	r.Get("/candles/time-frame/distinct", candleHandler.GetDistinctTimeFrames)
+	r.Get("/candles/pairs", candleHandler.GetSymbolTimeframePairs)
+	r.Get("/candles/exists", candleHandler.CheckCandleExists)
+	r.Get("/candles/oldest", candleHandler.GetOldestCandle)
+	r.Get("/candles/gap", candleHandler.GetCandleGaps)
 
+	//Session API
 	sessionService := sessions.NewService(repo.New(app.db))
 	sessionHandler := sessions.NewHandler(sessionService)
-
 	r.Post("/sessions", sessionHandler.CreateSession)
 	r.Get("/sessions/{id}", sessionHandler.GetSessionByID)
-	// ... all your other session routes stay the same ...
+	r.Get("/sessions/name/{session_name}", sessionHandler.GetSessionByName)
+	r.Get("/sessions/all", sessionHandler.ListAllSessions)
+	r.Get("/sessions/all/limit", sessionHandler.ListSessionWithLimit)
+	r.Get("/sessions/active", sessionHandler.GetActiveSessions)
+	r.Get("/sessions/completed", sessionHandler.GetCompletedSessions)
+	r.Get("/sessions/favorite", sessionHandler.GetFavoriteSessions)
+	r.Get("/sessions/symbol", sessionHandler.GetSessionsBySymbols)
+	r.Get("/sessions/strategy", sessionHandler.GetSessionByStrategy)
+	r.Get("/sessions/status", sessionHandler.GetSessionByStatus)
+	r.Get("/sessions/recent", sessionHandler.GetRecentSessions)
 
 	return r
 }
@@ -103,7 +98,7 @@ func (app *application) run(h http.Handler) error {
 	return srv.ListenAndServe()
 }
 
-func newApplication(templates *template.Template) *application {
+func newApplication() *application {
 	return &application{
 		config: config{
 			addr: ":8080",
@@ -111,6 +106,5 @@ func newApplication(templates *template.Template) *application {
 				dsn: os.Getenv("DATABASE_URL"),
 			},
 		},
-		templates: templates,
 	}
 }
